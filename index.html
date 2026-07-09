@@ -1203,6 +1203,15 @@ async function updateLab(id) {
   const btn = document.querySelector('#lab-overlay .btn-primary');
   btn.textContent = 'Saving…'; btn.disabled = true;
   try {
+    // Upload any new screenshots
+    const newUrls = [];
+    for (const f of pendingFiles) { const u = await uploadImg(f.file); if (u) newUrls.push(u); }
+
+    // Merge with existing screenshots from the lab record
+    const existing = labs.find(l => l.id === id);
+    const existingUrls = existing?.screenshots || [];
+    const allUrls = [...existingUrls, ...newUrls];
+
     const env = document.getElementById('f-environment').value.trim();
     const tags = document.getElementById('f-tags').value.trim();
     const skills = document.getElementById('f-skills').value.trim();
@@ -1222,6 +1231,7 @@ async function updateLab(id) {
       lessons: document.getElementById('f-lessons').value.trim() || null,
       skills_demonstrated: skills ? skills.split(',').map(s => s.trim()).filter(Boolean) : [],
       ref_links: refs || null,
+      screenshots: allUrls,
       updated_at: new Date().toISOString(),
     };
     await sb(`lab_reports?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
