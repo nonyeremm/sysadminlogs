@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SysAdmin Logs — Progress</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface2: #1c2333;
+  --border: #30363d;
+  --border2: #21262d;
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --text3: #6e7681;
+  --accent: #3fb950;
+  --accent2: #238636;
+  --blue: #58a6ff;
+  --red: #f85149;
+  --radius: 8px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ── DESKTOP LAYOUT ── */
+.layout { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: 220px;
+  min-width: 220px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+}
+
+.sidebar-brand {
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.brand-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--text3);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+
+.brand-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.brand-sub {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 1px;
+}
+
+.sidebar-pulse {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border2);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.pulse-dot {
+  width: 6px; height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 5px var(--accent);
+  flex-shrink: 0;
+}
+
+.pulse-text { font-size: 11px; color: var(--text3); }
+
+.sidebar-nav { padding: 6px 0; flex: 1; }
+
+.nav-label {
+  padding: 8px 16px 3px;
+  font-size: 9px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text3);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 16px;
+  cursor: pointer;
+  color: var(--text2);
+  font-size: 13px;
+  border-left: 2px solid transparent;
+  transition: all 0.12s;
+  user-select: none;
+}
+
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { color: var(--accent); background: rgba(63,185,80,0.07); border-left-color: var(--accent); }
+
+.nav-icon { font-size: 13px; width: 16px; text-align: center; }
+
+.nav-count {
+  margin-left: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text3);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 1px 6px;
+  border-radius: 8px;
+}
+
+.sidebar-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text3);
+  line-height: 1.7;
+}
+
+.sidebar-footer .goal { color: var(--accent); margin-top: 3px; }
+
+/* ── MAIN ── */
+.main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; }
+
+.topbar {
+  height: 48px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 10px;
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.topbar-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--text2);
+}
+.topbar-title span { color: var(--text); font-weight: 600; }
+
+.topbar-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+.content { padding: 16px 20px; max-width: 820px; }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 13px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  font-family: 'Inter', sans-serif;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+
+.btn-primary { background: var(--accent2); border-color: rgba(63,185,80,0.4); color: #fff; }
+.btn-primary:hover { background: #2ea043; }
+.btn-ghost { background: transparent; border-color: transparent; color: var(--text2); }
+.btn-ghost:hover { background: var(--surface2); color: var(--text); }
+
+/* ── PAGES ── */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ── DASHBOARD ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 13px 14px;
+}
+
+.stat-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+
+.stat-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.stat-sub { font-size: 10px; color: var(--text3); margin-top: 3px; }
+
+.section-head {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border2);
+}
+
+.activity-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border2);
+  cursor: pointer;
+  min-width: 0;
+}
+.activity-item:last-child { border-bottom: none; }
+
+.a-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.a-dot.lab { background: var(--accent); }
+.a-dot.journal { background: var(--blue); }
+
+.a-info { flex: 1; min-width: 0; overflow: hidden; }
+.a-title { font-size: 12px; color: var(--text); word-break: break-word; }
+.a-type { font-size: 10px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
+.a-date { font-size: 10px; color: var(--text3); font-family: 'JetBrains Mono', monospace; flex-shrink: 0; white-space: nowrap; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+  overflow: hidden;
+  transition: border-color 0.12s;
+}
+.card:hover { border-color: #444c56; }
+
+.card-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.card-icon {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  background: rgba(63,185,80,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.card-icon.blue { background: rgba(88,166,255,0.1); }
+
+.card-info { flex: 1; min-width: 0; }
+.card-title { font-size: 13px; font-weight: 600; color: var(--text); word-break: break-word; }
+.card-date { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text3); margin-top: 1px; }
+
+.card-chev { color: var(--text3); font-size: 10px; transition: transform 0.2s; flex-shrink: 0; }
+.card-chev.open { transform: rotate(90deg); }
+
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 0 14px 10px;
+}
+
+.tag {
+  background: rgba(31,111,235,0.12);
+  border: 1px solid rgba(31,111,235,0.25);
+  color: var(--blue);
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.card-body {
+  display: none;
+  border-top: 1px solid var(--border2);
+  padding: 12px 14px;
+}
+.card-body.open { display: block; }
+
+/* ── FIELDS ── */
+.field { margin-bottom: 10px; }
+.field:last-child { margin-bottom: 0; }
+
+.field-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 2px;
+}
+
+.field-val {
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.5;
+}
+
+.env-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+
+.env-chip {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.screenshots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.ss-thumb {
+  aspect-ratio: 16/10;
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  background: var(--surface2);
+}
+
+.ss-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+.gh-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--blue);
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  text-decoration: none;
+  word-break: break-all;
+}
+.gh-link:hover { text-decoration: underline; }
+
+/* ── EMPTY ── */
+.empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text3);
+}
+.empty-icon { font-size: 32px; margin-bottom: 8px; }
+.empty-title { font-size: 14px; font-weight: 600; color: var(--text2); margin-bottom: 4px; }
+.empty-text { font-size: 12px; max-width: 260px; margin: 0 auto 14px; }
+
+/* ── FORMS ── */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 300;
+  overflow-y: auto;
+  padding: 24px 16px 40px;
+  align-items: flex-start;
+  justify-content: center;
+}
+.overlay.open { display: flex; }
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  width: 100%;
+  max-width: 600px;
+}
+
+.modal-head {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text3);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1;
+}
+.modal-close:hover { background: var(--surface2); color: var(--text); }
+
+.modal-body { padding: 16px; }
+.modal-foot { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+
+.fg { margin-bottom: 12px; }
+.fg:last-child { margin-bottom: 0; }
+
+.fg label {
+  display: block;
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+
+input[type=text], input[type=date], input[type=url], textarea, select {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  padding: 7px 10px;
+  outline: none;
+  transition: border-color 0.12s;
+}
+
+input:focus, textarea:focus { border-color: var(--blue); }
+textarea { resize: vertical; min-height: 72px; }
+
+.upload-zone {
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  color: var(--text3);
+  font-size: 12px;
+  transition: all 0.12s;
+}
+.upload-zone:hover { border-color: var(--blue); color: var(--text2); }
+
+.upload-previews { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+
+.up-prev {
+  position: relative;
+  width: 64px; height: 48px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.up-prev img { width: 100%; height: 100%; object-fit: cover; }
+.up-rm {
+  position: absolute;
+  top: 1px; right: 1px;
+  background: rgba(0,0,0,0.75);
+  border: none;
+  color: #fff;
+  font-size: 9px;
+  border-radius: 2px;
+  cursor: pointer;
+  padding: 1px 3px;
+  line-height: 1.4;
+}
+
+/* ── MOBILE SLIM SIDEBAR ── */
+.mobile-sidebar {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: 52px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  z-index: 100;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 0;
+  gap: 4px;
+}
+
+.ms-brand {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--accent);
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  letter-spacing: 0.08em;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border2);
+  width: 100%;
+  text-align: center;
+  padding: 0 0 12px;
+}
+
+.ms-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 40px; height: 40px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text3);
+  font-size: 16px;
+  transition: all 0.12s;
+  user-select: none;
+  border: 1px solid transparent;
+  margin: 2px 0;
+}
+
+.ms-item:hover { background: var(--surface2); color: var(--text); }
+.ms-item.active { background: rgba(63,185,80,0.1); color: var(--accent); border-color: rgba(63,185,80,0.2); }
+
+.ms-spacer { flex: 1; }
+
+.fab {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  right: 16px;
+  width: 44px; height: 44px;
+  background: var(--accent2);
+  border: 1px solid rgba(63,185,80,0.5);
+  border-radius: 50%;
+  color: #fff;
+  font-size: 20px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 99;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.4);
+}
+
+/* ── LIGHTBOX ── */
+.lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.93);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+}
+.lightbox.open { display: flex; }
+.lightbox img { max-width: 92vw; max-height: 88vh; border-radius: 6px; }
+.lb-close { position: absolute; top: 16px; right: 16px; background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 20px; right: 16px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--text);
+  z-index: 999;
+  transform: translateY(60px);
+  opacity: 0;
+  transition: all 0.25s;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { border-color: var(--accent); }
+.toast.error { border-color: var(--red); }
+
+/* ── LOADING ── */
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text3);
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 20px 0;
+}
+.spinner {
+  width: 12px; height: 12px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 400px) {
+  .a-date { display: none; }
+}
+
+@media (max-width: 700px) {
+  .sidebar { display: none; }
+  .mobile-sidebar { display: flex; }
+  .main { margin-left: 52px; width: calc(100% - 52px); overflow-x: hidden; }
+  .content { padding: 10px 10px 24px; max-width: 100%; }
+  .topbar { padding: 0 10px; }
+  .topbar-right .btn { display: none; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); gap: 7px; margin-bottom: 14px; }
+  .stat { padding: 10px 10px; }
+  .stat-val { font-size: 22px; }
+  .card-title { font-size: 12px; }
+  .card-row { padding: 10px 12px; }
+  .fab { display: flex; }
+}
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-eyebrow">// sysadmin logs</div>
+      <div class="brand-name">progress.log</div>
+      <div class="brand-sub">Self-study journal</div>
+    </div>
+    <div class="sidebar-pulse">
+      <div class="pulse-dot"></div>
+      <div class="pulse-text">Active — learning in progress</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label">Navigate</div>
+      <div class="nav-item active" onclick="nav('dashboard')" id="sn-dashboard">
+        <span class="nav-icon">▦</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="nav('labs')" id="sn-labs">
+        <span class="nav-icon">⚗</span> Lab Reports
+        <span class="nav-count" id="cnt-labs">0</span>
+      </div>
+      <div class="nav-item" onclick="nav('journal')" id="sn-journal">
+        <span class="nav-icon">≡</span> Journal
+        <span class="nav-count" id="cnt-journal">0</span>
+      </div>
+      <div class="nav-item" onclick="nav('search')" id="sn-search">
+        <span class="nav-icon">🔍</span> Search
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div>Networking · Windows Server</div>
+      <div>Linux · Automation</div>
+      <div class="goal">↳ Sysadmin role 2025</div>
+      <div style="margin-top:8px;border-top:1px solid var(--border2);padding-top:8px">
+        <span id="lock-btn" onclick="toggleAdmin()" style="cursor:pointer;font-size:16px;user-select:none" title="Admin login">🔒</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title"><span>Dashboard</span></div>
+      <div class="topbar-right" id="topbar-right"></div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="stats-row">
+          <div class="stat">
+            <div class="stat-label">Lab Reports</div>
+            <div class="stat-val" id="s-labs">—</div>
+            <div class="stat-sub">Completed</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Journal</div>
+            <div class="stat-val" id="s-journal">—</div>
+            <div class="stat-sub">Sessions logged</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Evidence</div>
+            <div class="stat-val" id="s-screenshots">—</div>
+            <div class="stat-sub">Snapshots</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Days Active</div>
+            <div class="stat-val" id="s-days">—</div>
+            <div class="stat-sub">Since start</div>
+          </div>
+        </div>
+        <div class="section-head">// recent activity</div>
+        <div id="activity-list"><div class="loading"><div class="spinner"></div>Loading…</div></div>
+      </div>
+
+      <!-- LAB REPORTS -->
+      <div class="page" id="page-labs">
+        <div id="labs-list"><div class="loading"><div class="spinner"></div>Loading…</div></div>
+      </div>
+
+      <!-- SEARCH -->
+      <div class="page" id="page-search">
+        <div class="fg" style="margin-bottom:16px">
+          <input type="text" id="search-input" placeholder="Search labs, journals, skills, topics…" oninput="doSearch(this.value)" style="font-size:14px;padding:10px 12px;">
+        </div>
+        <div id="search-results"><div style="color:var(--text3);font-size:12px;font-family:'JetBrains Mono',monospace">// start typing to search</div></div>
+      </div>
+
+      <!-- JOURNAL -->
+      <div class="page" id="page-journal">
+        <div id="journal-list"><div class="loading"><div class="spinner"></div>Loading…</div></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE SLIM SIDEBAR -->
+<nav class="mobile-sidebar">
+  <div class="ms-brand">P.LOG</div>
+  <div class="ms-item active" id="ms-dashboard" onclick="nav('dashboard')" title="Dashboard">▦</div>
+  <div class="ms-item" id="ms-labs" onclick="nav('labs')" title="Lab Reports">⚗</div>
+  <div class="ms-item" id="ms-journal" onclick="nav('journal')" title="Journal">≡</div>
+  <div class="ms-item" id="ms-search" onclick="nav('search')" title="Search">🔍</div>
+  <div class="ms-spacer"></div>
+  <div class="ms-item" onclick="toggleAdmin()" title="Admin" style="margin-bottom:8px" id="ms-lock">🔒</div>
+</nav>
+
+<!-- FAB -->
+<div class="fab" id="fab" onclick="fabAction()" style="display:none">＋</div>
+
+<!-- LAB FORM -->
+<div class="overlay" id="lab-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">// new lab report</div>
+      <button class="modal-close" onclick="closeLabForm()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="fg"><label>Title</label><input type="text" id="f-title" placeholder="e.g. Active Directory – Group Policy Drive Mapping"></div>
+      <div class="fg"><label>Date</label><input type="date" id="f-date"></div>
+      <div class="fg"><label>Tags (comma separated)</label><input type="text" id="f-tags" placeholder="Active Directory, Group Policy, Windows Server"></div>
+      <div class="fg"><label>Objective</label><textarea id="f-objective" rows="2" placeholder="What were you trying to accomplish?"></textarea></div>
+      <div class="fg"><label>Scenario</label><textarea id="f-scenario" rows="2" placeholder="e.g. Finance users require an automatically mapped departmental drive while the CEO should remain exempt from desktop restrictions."></textarea></div>
+      <div class="fg"><label>Level</label><select id="f-difficulty">
+        <option value="">— Select —</option>
+        <option value="🟢 Beginner">🟢 Beginner</option>
+        <option value="🟡 Intermediate">🟡 Intermediate</option>
+        <option value="🔵 Advanced">🔵 Advanced</option>
+      </select></div>
+      <div class="fg"><label>Environment (one per line)</label><textarea id="f-environment" rows="3" placeholder="Windows Server 2022&#10;Active Directory&#10;VMware Workstation"></textarea></div>
+      <div class="fg"><label>Architecture</label><textarea id="f-architecture" rows="4" placeholder="DC01&#10;│&#10;├── Finance OU&#10;│   ├── Finance Users&#10;│   └── Finance Desktop Restrictions GPO"></textarea></div>
+      <div class="fg"><label>Implementation</label><textarea id="f-implementation" rows="4" placeholder="Step by step what you did…"></textarea></div>
+      <div class="fg"><label>Issues Encountered</label><textarea id="f-issues" rows="2" placeholder="What went wrong?"></textarea></div>
+      <div class="fg"><label>Resolution</label><textarea id="f-resolution" rows="2" placeholder="How did you fix it?"></textarea></div>
+      <div class="fg"><label>Lessons Learned</label><textarea id="f-lessons" rows="2" placeholder="Key takeaways…"></textarea></div>
+      <div class="fg"><label>Skills Demonstrated (comma separated)</label><input type="text" id="f-skills" placeholder="Active Directory, Group Policy, GPResult, NTFS"></div>
+      <div class="fg"><label>References (GitHub, docs, scripts — one per line)</label><textarea id="f-refs" rows="2" placeholder="https://github.com/you/repo&#10;https://docs.microsoft.com/..."></textarea></div>
+      <div class="fg">
+        <label>Evidence</label>
+        <div class="upload-zone" onclick="document.getElementById('f-files').click()">📷 Tap to upload evidence</div>
+        <input type="file" id="f-files" multiple accept="image/*" style="display:none" onchange="handleFiles(this)">
+        <div class="upload-previews" id="up-previews"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeLabForm()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveLabReport()">Save Report</button>
+    </div>
+  </div>
+</div>
+
+<!-- JOURNAL FORM -->
+<div class="overlay" id="journal-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">// new journal entry</div>
+      <button class="modal-close" onclick="closeJournalForm()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="fg"><label>Title</label><input type="text" id="j-title" placeholder="e.g. Windows Server – NTFS Permissions"></div>
+      <div class="fg"><label>Phase</label><input type="text" id="j-phase" placeholder="e.g. win, net, linux"></div>
+      <div class="fg"><label>Time Spent</label><input type="text" id="j-time" placeholder="e.g. 2 hours"></div>
+      <div class="fg"><label>What I Read / Studied</label><textarea id="j-read" rows="3" placeholder="Topics covered…"></textarea></div>
+      <div class="fg"><label>Lab Done</label><textarea id="j-lab" rows="2" placeholder="Any hands-on work?"></textarea></div>
+      <div class="fg"><label>What Clicked</label><textarea id="j-clicked" rows="2" placeholder="What made sense?"></textarea></div>
+      <div class="fg"><label>What Confused Me</label><textarea id="j-confused" rows="2" placeholder="What didn't click yet?"></textarea></div>
+      <div class="fg"><label>Next Session Plan</label><textarea id="j-next" rows="2" placeholder="Plan for next time…"></textarea></div>
+      <div class="fg"><label>Mood</label><input type="text" id="j-mood" placeholder="e.g. Focused, Tired, Motivated"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeJournalForm()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveJournalEntry()">Save Entry</button>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLB()">
+  <button class="lb-close">✕</button>
+  <img id="lb-img" src="" alt="">
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const SB_URL = 'https://fmnonjmbeavwaqdauptd.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZtbm9uam1iZWF2d2FxZGF1cHRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNjk2MjksImV4cCI6MjA4OTk0NTYyOX0.Tt0yDg6urskUlFvxD9hGmY44A_2YKzXvbWHR6qZGOP0';
+const H = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
+
+let labs = [], journals = [], pendingFiles = [], currentPage = 'dashboard';
+let isAdmin = false;
+const ADMIN_HASH = 'ef92b778bafe771207345f95e00f8e6e'; // MD5 of Dreamswayne
+
+async function md5(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('').substring(0,32);
+}
+
+async function checkAdmin(pw) {
+  const hash = await md5(pw);
+  // Use SHA-256 prefix comparison
+  const correct = await md5('Dreamswayne');
+  return hash === correct;
+}
+
+function promptAdmin(callback) {
+  if (isAdmin) { callback(); return; }
+  const pw = prompt('Enter admin password:');
+  if (!pw) return;
+  checkAdmin(pw).then(ok => {
+    if (ok) {
+      isAdmin = true;
+      updateAdminUI();
+      callback();
+    } else {
+      toast('Incorrect password', 'error');
+    }
+  });
+}
+
+function updateAdminUI() {
+  const lockBtn = document.getElementById('lock-btn');
+  const msLock = document.getElementById('ms-lock');
+  const icon = isAdmin ? '🔓' : '🔒';
+  if (lockBtn) lockBtn.textContent = icon;
+  if (msLock) msLock.textContent = icon;
+  const tr = document.getElementById('topbar-right');
+  if (currentPage === 'labs') {
+    tr.innerHTML = isAdmin ? `<button class="btn btn-primary" onclick="openLabForm()">＋ New Lab Report</button>` : `<button class="btn btn-ghost" onclick="promptAdmin(()=>openLabForm())">🔒 New Lab Report</button>`;
+  } else if (currentPage === 'journal') {
+    tr.innerHTML = isAdmin ? `<button class="btn btn-primary" onclick="openJournalForm()">＋ New Entry</button>` : `<button class="btn btn-ghost" onclick="promptAdmin(()=>openJournalForm())">🔒 New Entry</button>`;
+  }
+  const fab = document.getElementById('fab');
+  if (fab && (currentPage === 'labs' || currentPage === 'journal')) {
+    fab.style.display = 'flex';
+    fab.textContent = isAdmin ? '＋' : '🔒';
+    fab.onclick = isAdmin ? fabAction : () => promptAdmin(fabAction);
+  }
+}
+
+async function sb(path, opts = {}) {
+  const r = await fetch(`${SB_URL}/rest/v1/${path}`, { headers: H, ...opts });
+  if (!r.ok) throw new Error(await r.text());
+  return r.status === 204 ? null : r.json();
+}
+
+async function uploadImg(file) {
+  const ext = file.name.split('.').pop();
+  const name = `${Date.now()}-${Math.random().toString(36).substr(2,5)}.${ext}`;
+  try {
+    const r = await fetch(`${SB_URL}/storage/v1/object/screenshots/${name}`, {
+      method: 'POST',
+      headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': file.type },
+      body: file
+    });
+    const text = await r.text();
+    if (!r.ok) {
+      toast('Upload error: ' + text, 'error');
+      console.error('Upload failed:', text);
+      return null;
+    }
+    return `${SB_URL}/storage/v1/object/public/screenshots/${name}`;
+  } catch(e) {
+    toast('Upload error: ' + e.message, 'error');
+    console.error('Upload exception:', e);
+    return null;
+  }
+}
+
+// ── NAV ──
+function nav(page) {
+  currentPage = page;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  ['dashboard','labs','journal','search'].forEach(p => {
+    document.getElementById(`sn-${p}`)?.classList.toggle('active', p === page);
+    document.getElementById(`ms-${p}`)?.classList.toggle('active', p === page);
+  });
+  document.getElementById(`page-${page}`).classList.add('active');
+
+  const titles = { dashboard: 'Dashboard', labs: 'Lab Reports', journal: 'Study Journal', search: 'Search' };
+  document.getElementById('topbar-title').innerHTML = `<span>${titles[page]}</span>`;
+
+  const tr = document.getElementById('topbar-right');
+  if (page === 'labs') {
+    tr.innerHTML = isAdmin ? `<button class="btn btn-primary" onclick="openLabForm()">＋ New Lab Report</button>` : `<button class="btn btn-ghost" onclick="promptAdmin(()=>openLabForm())">🔒 New Lab Report</button>`;
+  } else if (page === 'journal') {
+    tr.innerHTML = isAdmin ? `<button class="btn btn-primary" onclick="openJournalForm()">＋ New Entry</button>` : `<button class="btn btn-ghost" onclick="promptAdmin(()=>openJournalForm())">🔒 New Entry</button>`;
+  } else {
+    tr.innerHTML = '';
+  }
+
+  const fab = document.getElementById('fab');
+  if (page === 'labs' || page === 'journal') {
+    fab.style.display = 'flex';
+    fab.textContent = isAdmin ? '＋' : '🔒';
+    fab.onclick = isAdmin ? fabAction : () => promptAdmin(fabAction);
+  } else {
+    fab.style.display = 'none';
+  }
+}
+
+function toggleAdmin() {
+  if (isAdmin) {
+    isAdmin = false;
+    updateAdminUI();
+    toast('Logged out');
+  } else {
+    promptAdmin(() => toast('✓ Admin unlocked'));
+  }
+}
+
+function fabAction() {
+  currentPage === 'labs' ? openLabForm() : openJournalForm();
+}
+
+// ── SEARCH ──
+function doSearch(query) {
+  const el = document.getElementById('search-results');
+  const q = query.trim().toLowerCase();
+  if (!q) { el.innerHTML = `<div style="color:var(--text3);font-size:12px;font-family:'JetBrains Mono',monospace">// start typing to search</div>`; return; }
+
+  const labMatches = labs.filter(l =>
+    [l.title, l.objective, l.scenario, l.implementation, l.lessons, l.issues, l.resolution, l.architecture, ...(l.tags||[]), ...(l.skills_demonstrated||[])].some(f => f && f.toLowerCase().includes(q))
+  );
+  const journalMatches = journals.filter(j =>
+    [j.title, j.read_studied, j.lab_done, j.what_clicked, j.what_confused, j.phase].some(f => f && f.toLowerCase().includes(q))
+  );
+  const total = labMatches.length + journalMatches.length;
+
+  if (!total) { el.innerHTML = `<div style="color:var(--text3);font-size:12px;font-family:'JetBrains Mono',monospace">// no results for "${esc(query)}"</div>`; return; }
+
+  let html = `<div style="color:var(--text3);font-size:11px;font-family:'JetBrains Mono',monospace;margin-bottom:12px">// ${total} result${total!==1?'s':''} for "${esc(query)}"</div>`;
+
+  if (labMatches.length) {
+    html += `<div class="section-head">Lab Reports (${labMatches.length})</div>`;
+    html += labMatches.map((lab, i) => `
+      <div class="card" style="margin-bottom:8px">
+        <div class="card-row" onclick="toggle('sr-lb-${i}','sr-lc-${i}')">
+          <div class="card-icon">⚗</div>
+          <div class="card-info"><div class="card-title">${highlight(lab.title, q)}</div><div class="card-date">${fmtDate(lab.date||lab.created_at)}</div></div>
+          <div class="card-chev" id="sr-lc-${i}">▶</div>
+        </div>
+        <div class="card-body" id="sr-lb-${i}">${renderLabBody(lab)}</div>
+      </div>`).join('');
+  }
+
+  if (journalMatches.length) {
+    html += `<div class="section-head" style="margin-top:16px">Journal Entries (${journalMatches.length})</div>`;
+    html += journalMatches.map((j, i) => `
+      <div class="card" style="margin-bottom:8px">
+        <div class="card-row" onclick="toggle('sr-jb-${i}','sr-jc-${i}')">
+          <div class="card-icon blue">≡</div>
+          <div class="card-info"><div class="card-title">${highlight(j.title||'Journal Entry', q)}</div><div class="card-date">${fmtDate(j.created_at)}</div></div>
+          <div class="card-chev" id="sr-jc-${i}">▶</div>
+        </div>
+        <div class="card-body" id="sr-jb-${i}">${renderJournalBody(j)}</div>
+      </div>`).join('');
+  }
+
+  el.innerHTML = html;
+}
+
+function highlight(text, query) {
+  if (!text) return '';
+  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return esc(text).replace(new RegExp(escaped, 'gi'), m => `<mark style="background:rgba(63,185,80,0.2);color:var(--accent);border-radius:2px;padding:0 2px">${m}</mark>`);
+}
+
+// ── LOAD ──
+async function loadAll() {
+  await Promise.all([loadLabs(), loadJournals()]);
+  renderDashboard();
+}
+
+async function loadLabs() {
+  try { labs = await sb('lab_reports?select=*&order=date.desc') || []; } catch { labs = []; }
+  renderLabs();
+  document.getElementById('cnt-labs').textContent = labs.length;
+}
+
+async function loadJournals() {
+  try { journals = await sb('journal_entries?select=*&order=created_at.desc') || []; } catch { journals = []; }
+  renderJournals();
+  document.getElementById('cnt-journal').textContent = journals.length;
+}
+
+// ── DASHBOARD ──
+function renderDashboard() {
+  document.getElementById('s-labs').textContent = labs.length;
+  document.getElementById('s-journal').textContent = journals.length;
+  document.getElementById('s-screenshots').textContent = labs.reduce((a, l) => a + (l.screenshots?.length || 0), 0);
+
+  const dates = [...labs.map(l => new Date(l.date || l.created_at)), ...journals.map(j => new Date(j.created_at))].filter(d => !isNaN(d));
+  document.getElementById('s-days').textContent = dates.length ? Math.floor((Date.now() - Math.min(...dates)) / 86400000) + 1 : 0;
+
+  const combined = [
+    ...labs.map(l => ({ type: 'lab', title: l.title, date: l.date || l.created_at })),
+    ...journals.map(j => ({ type: 'journal', title: j.title || 'Journal Entry', date: j.created_at }))
+  ].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 10);
+
+  const el = document.getElementById('activity-list');
+  if (!combined.length) { el.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">Nothing yet</div><div class="empty-text">Create your first lab report or journal entry.</div></div>`; return; }
+  el.innerHTML = combined.map(i => `
+    <div class="activity-item" onclick="nav('${i.type === 'lab' ? 'labs' : 'journal'}')">
+      <div class="a-dot ${i.type}"></div>
+      <div class="a-info">
+        <div class="a-title">${esc(i.title)}</div>
+        <div class="a-type">${i.type === 'lab' ? '⚗ lab report' : '≡ journal'}</div>
+      </div>
+      <div class="a-date">${fmtDate(i.date)}</div>
+    </div>`).join('');
+}
+
+// ── LABS ──
+function renderLabs() {
+  const el = document.getElementById('labs-list');
+  if (!labs.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">⚗</div><div class="empty-title">No lab reports yet</div><div class="empty-text">Document your first lab with objectives, steps, and screenshots.</div><button class="btn btn-primary" onclick="promptAdmin(()=>openLabForm())">＋ New Lab Report</button></div>`;
+    return;
+  }
+  el.innerHTML = labs.map((lab, i) => `
+    <div class="card">
+      <div class="card-row" onclick="toggle('lb-${i}','lbchev-${i}')">
+        <div class="card-icon">⚗</div>
+        <div class="card-info">
+          <div class="card-title">${esc(lab.title)}</div>
+          <div class="card-date">${fmtDate(lab.created_at)}${lab.updated_at ? ` · edited ${fmtDate(lab.updated_at)}` : ''}</div>
+        </div>
+        <div class="card-chev" id="lbchev-${i}">▶</div>
+      </div>
+      ${lab.tags?.length ? `<div class="card-tags">${lab.tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}</div>` : ''}
+      <div class="card-body" id="lb-${i}">
+        ${renderLabBody(lab)}
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border2);display:flex;gap:8px">
+          <button class="btn btn-ghost" style="font-size:11px" onclick="promptAdmin(()=>editLab(${i}))">✏️ Edit</button>
+          <button class="btn btn-ghost" style="font-size:11px;color:var(--red)" onclick="promptAdmin(()=>deleteLab('${lab.id}'))">🗑 Delete</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function renderLabBody(lab) {
+  const f = (label, val) => val ? `<div class="field"><div class="field-label">${label}</div><div class="field-val">${esc(val.trim())}</div></div>` : '';
+  let h = '';
+
+  if (lab.difficulty) h += `<div class="field"><div class="field-label">Level</div><div class="field-val">${esc(lab.difficulty)}</div></div>`;
+  h += f('Objective', lab.objective);
+  h += f('Scenario', lab.scenario);
+  if (lab.environment?.length) h += `<div class="field"><div class="field-label">Environment</div><div class="env-chips">${lab.environment.map(e => `<span class="env-chip">${esc(e)}</span>`).join('')}</div></div>`;
+  if (lab.architecture) h += `<div class="field"><div class="field-label">Architecture</div><div class="field-val" style="font-family:'JetBrains Mono',monospace;font-size:12px;white-space:pre;overflow-x:auto">${esc(lab.architecture)}</div></div>`;
+  h += f('Implementation', lab.implementation);
+  h += f('Issues Encountered', lab.issues);
+  h += f('Resolution', lab.resolution);
+  h += f('Lessons Learned', lab.lessons);
+  if (lab.skills_demonstrated?.length) h += `<div class="field"><div class="field-label">Skills Demonstrated</div><div class="env-chips">${lab.skills_demonstrated.map(s => `<span class="env-chip">${esc(s)}</span>`).join('')}</div></div>`;
+  if (lab.ref_links) h += `<div class="field"><div class="field-label">References</div><div class="field-val">${lab.ref_links.trim().split('\n').map(l => l.trim()).filter(Boolean).map(l => l.startsWith('http') ? `<a class="gh-link" href="${esc(l)}" target="_blank">⌥ ${esc(l)}</a>` : esc(l)).join('<br>')}</div></div>`;
+  if (lab.screenshots?.length) h += `<div class="field"><div class="field-label">Evidence (${lab.screenshots.length})</div><div class="screenshots-grid">${lab.screenshots.map(u => `<div class="ss-thumb" onclick="openLB('${esc(u)}')"><img src="${esc(u)}" loading="lazy"></div>`).join('')}</div></div>`;
+  return h || `<div style="color:var(--text3);font-size:12px">No details recorded.</div>`;
+}
+
+// ── JOURNALS ──
+function renderJournals() {
+  const el = document.getElementById('journal-list');
+  if (!journals.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">≡</div><div class="empty-title">No journal entries yet</div><div class="empty-text">Log what you studied today.</div><button class="btn btn-primary" onclick="promptAdmin(()=>openJournalForm())">＋ New Entry</button></div>`;
+    return;
+  }
+  el.innerHTML = journals.map((j, i) => `
+    <div class="card">
+      <div class="card-row" onclick="toggle('jb-${i}','jchev-${i}')">
+        <div class="card-icon blue">≡</div>
+        <div class="card-info">
+          <div class="card-title">${esc(j.title || 'Journal Entry')}</div>
+          <div class="card-date">${fmtDate(j.created_at)}${j.updated_at ? ` · edited ${fmtDate(j.updated_at)}` : ''}</div>
+        </div>
+        <div class="card-chev" id="jchev-${i}">▶</div>
+      </div>
+      <div class="card-body" id="jb-${i}">
+        ${renderJournalBody(j)}
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border2);display:flex;gap:8px">
+          <button class="btn btn-ghost" style="font-size:11px" onclick="promptAdmin(()=>editJournal(${i}))">✏️ Edit</button>
+          <button class="btn btn-ghost" style="font-size:11px;color:var(--red)" onclick="promptAdmin(()=>deleteJournal('${j.id}'))">🗑 Delete</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function renderJournalBody(j) {
+  const fields = [
+    ['Phase', j.phase], ['Time Spent', j.time_spent], ['What I Read / Studied', j.read_studied],
+    ['Lab Done', j.lab_done], ['What Clicked', j.what_clicked], ['What Confused Me', j.what_confused],
+    ['Next Session Plan', j.next_session], ['Mood', j.mood]
+  ];
+  return fields.filter(([, v]) => v && v.trim()).map(([label, val]) =>
+    `<div class="field"><div class="field-label">${label}</div><div class="field-val">${esc(val.trim())}</div></div>`
+  ).join('') || `<div style="color:var(--text3);font-size:12px">No content recorded.</div>`;
+}
+
+// ── TOGGLE ──
+function toggle(bodyId, chevId) {
+  document.getElementById(bodyId).classList.toggle('open');
+  document.getElementById(chevId).classList.toggle('open');
+}
+
+// ── EDIT ──
+function editLab(i) {
+  const lab = labs[i];
+  document.getElementById('f-title').value = lab.title || '';
+  document.getElementById('f-date').value = lab.date || new Date().toISOString().split('T')[0];
+  document.getElementById('f-tags').value = (lab.tags || []).join(', ');
+  document.getElementById('f-objective').value = lab.objective || '';
+  document.getElementById('f-scenario').value = lab.scenario || '';
+  document.getElementById('f-difficulty').value = lab.difficulty || '';
+  document.getElementById('f-environment').value = (lab.environment || []).join('\n');
+  document.getElementById('f-architecture').value = lab.architecture || '';
+  document.getElementById('f-implementation').value = lab.implementation || '';
+  document.getElementById('f-issues').value = lab.issues || '';
+  document.getElementById('f-resolution').value = lab.resolution || '';
+  document.getElementById('f-lessons').value = lab.lessons || '';
+  document.getElementById('f-skills').value = (lab.skills_demonstrated || []).join(', ');
+  document.getElementById('f-refs').value = lab.ref_links || '';
+
+  // Switch save button to update mode
+  const btn = document.querySelector('#lab-overlay .btn-primary');
+  btn.textContent = 'Update Report';
+  btn.onclick = () => updateLab(lab.id);
+
+  document.getElementById('lab-overlay').classList.add('open');
+}
+
+async function updateLab(id) {
+  const title = document.getElementById('f-title').value.trim();
+  if (!title) { toast('Please enter a title', 'error'); return; }
+  const btn = document.querySelector('#lab-overlay .btn-primary');
+  btn.textContent = 'Saving…'; btn.disabled = true;
+  try {
+    const env = document.getElementById('f-environment').value.trim();
+    const tags = document.getElementById('f-tags').value.trim();
+    const skills = document.getElementById('f-skills').value.trim();
+    const refs = document.getElementById('f-refs').value.trim();
+    const payload = {
+      title,
+      date: document.getElementById('f-date').value || null,
+      tags: tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+      difficulty: document.getElementById('f-difficulty').value || null,
+      objective: document.getElementById('f-objective').value.trim() || null,
+      scenario: document.getElementById('f-scenario').value.trim() || null,
+      environment: env ? env.split('\n').map(t => t.trim()).filter(Boolean) : [],
+      architecture: document.getElementById('f-architecture').value.trim() || null,
+      implementation: document.getElementById('f-implementation').value.trim() || null,
+      issues: document.getElementById('f-issues').value.trim() || null,
+      resolution: document.getElementById('f-resolution').value.trim() || null,
+      lessons: document.getElementById('f-lessons').value.trim() || null,
+      skills_demonstrated: skills ? skills.split(',').map(s => s.trim()).filter(Boolean) : [],
+      ref_links: refs || null,
+      updated_at: new Date().toISOString(),
+    };
+    await sb(`lab_reports?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+    closeLabForm();
+    await loadLabs();
+    renderDashboard();
+    toast('✓ Lab report updated');
+    nav('labs');
+  } catch(e) { toast('Error: ' + e.message, 'error'); }
+  finally { btn.textContent = 'Update Report'; btn.disabled = false; }
+}
+
+function editJournal(i) {
+  const j = journals[i];
+  document.getElementById('j-title').value = j.title || '';
+  document.getElementById('j-phase').value = j.phase || '';
+  document.getElementById('j-time').value = j.time_spent || '';
+  document.getElementById('j-read').value = j.read_studied || '';
+  document.getElementById('j-lab').value = j.lab_done || '';
+  document.getElementById('j-clicked').value = j.what_clicked || '';
+  document.getElementById('j-confused').value = j.what_confused || '';
+  document.getElementById('j-next').value = j.next_session || '';
+  document.getElementById('j-mood').value = j.mood || '';
+
+  const btn = document.querySelector('#journal-overlay .btn-primary');
+  btn.textContent = 'Update Entry';
+  btn.onclick = () => updateJournal(j.id);
+
+  document.getElementById('journal-overlay').classList.add('open');
+}
+
+async function deleteLab(id) {
+  if (!confirm('Delete this lab report? This cannot be undone.')) return;
+  try {
+    await sb(`lab_reports?id=eq.${id}`, { method: 'DELETE' });
+    await loadLabs();
+    renderDashboard();
+    toast('✓ Lab report deleted');
+  } catch(e) { toast('Error: ' + e.message, 'error'); }
+}
+
+async function deleteJournal(id) {
+  if (!confirm('Delete this journal entry? This cannot be undone.')) return;
+  try {
+    await sb(`journal_entries?id=eq.${id}`, { method: 'DELETE' });
+    await loadJournals();
+    renderDashboard();
+    toast('✓ Entry deleted');
+  } catch(e) { toast('Error: ' + e.message, 'error'); }
+}
+
+async function updateJournal(id) {
+  const title = document.getElementById('j-title').value.trim();
+  if (!title) { toast('Please enter a title', 'error'); return; }
+  const btn = document.querySelector('#journal-overlay .btn-primary');
+  btn.textContent = 'Saving…'; btn.disabled = true;
+  try {
+    await sb(`journal_entries?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify({
+      title,
+      phase: document.getElementById('j-phase').value.trim() || null,
+      time_spent: document.getElementById('j-time').value.trim() || null,
+      read_studied: document.getElementById('j-read').value.trim() || null,
+      lab_done: document.getElementById('j-lab').value.trim() || null,
+      what_clicked: document.getElementById('j-clicked').value.trim() || null,
+      what_confused: document.getElementById('j-confused').value.trim() || null,
+      next_session: document.getElementById('j-next').value.trim() || null,
+      mood: document.getElementById('j-mood').value.trim() || null,
+      updated_at: new Date().toISOString(),
+    })});
+    closeJournalForm();
+    await loadJournals();
+    renderDashboard();
+    toast('✓ Entry updated');
+    nav('journal');
+  } catch(e) { toast('Error: ' + e.message, 'error'); }
+  finally { btn.textContent = 'Update Entry'; btn.disabled = false; }
+}
+
+// ── LAB FORM ──
+function openLabForm() {
+  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('lab-overlay').classList.add('open');
+}
+
+function closeLabForm() {
+  document.getElementById('lab-overlay').classList.remove('open');
+  pendingFiles = [];
+  document.getElementById('up-previews').innerHTML = '';
+  ['f-title','f-tags','f-objective','f-scenario','f-architecture','f-environment','f-implementation','f-issues','f-resolution','f-lessons','f-skills','f-refs'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-difficulty').value = '';
+  const btn = document.querySelector('#lab-overlay .btn-primary');
+  btn.textContent = 'Save Report';
+  btn.onclick = saveLabReport;
+}
+
+function handleFiles(input) {
+  Array.from(input.files).forEach(file => {
+    const r = new FileReader();
+    r.onload = e => { pendingFiles.push({ file, url: e.target.result }); renderPreviews(); };
+    r.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function renderPreviews() {
+  document.getElementById('up-previews').innerHTML = pendingFiles.map((f, i) =>
+    `<div class="up-prev"><img src="${f.url}"><button class="up-rm" onclick="pendingFiles.splice(${i},1);renderPreviews()">✕</button></div>`).join('');
+}
+
+async function saveLabReport() {
+  const title = document.getElementById('f-title').value.trim();
+  if (!title) { toast('Please enter a title', 'error'); return; }
+  const btn = document.querySelector('#lab-overlay .btn-primary');
+  btn.textContent = 'Saving…'; btn.disabled = true;
+  try {
+    const urls = [];
+    for (const f of pendingFiles) { const u = await uploadImg(f.file); if (u) urls.push(u); }
+    const env = document.getElementById('f-environment').value.trim();
+    const tags = document.getElementById('f-tags').value.trim();
+    const skills = document.getElementById('f-skills').value.trim();
+    const refs = document.getElementById('f-refs').value.trim();
+
+    const payload = {
+      title,
+      date: document.getElementById('f-date').value || null,
+      tags: tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+      difficulty: document.getElementById('f-difficulty').value || null,
+      objective: document.getElementById('f-objective').value.trim() || null,
+      scenario: document.getElementById('f-scenario').value.trim() || null,
+      environment: env ? env.split('\n').map(t => t.trim()).filter(Boolean) : [],
+      architecture: document.getElementById('f-architecture').value.trim() || null,
+      implementation: document.getElementById('f-implementation').value.trim() || null,
+      issues: document.getElementById('f-issues').value.trim() || null,
+      resolution: document.getElementById('f-resolution').value.trim() || null,
+      lessons: document.getElementById('f-lessons').value.trim() || null,
+      skills_demonstrated: skills ? skills.split(',').map(s => s.trim()).filter(Boolean) : [],
+      ref_links: refs || null,
+      screenshots: urls.length ? urls : [],
+    };
+
+    await sb('lab_reports', { method: 'POST', body: JSON.stringify(payload) });
+    closeLabForm(); await loadLabs(); renderDashboard(); toast('✓ Lab report saved'); nav('labs');
+  } catch(e) { toast('Error: ' + e.message, 'error'); }
+  finally { btn.textContent = 'Save Report'; btn.disabled = false; }
+}
+
+// ── JOURNAL FORM ──
+function openJournalForm() { document.getElementById('journal-overlay').classList.add('open'); }
+
+function closeJournalForm() {
+  document.getElementById('journal-overlay').classList.remove('open');
+  ['j-title','j-phase','j-time','j-read','j-lab','j-clicked','j-confused','j-next','j-mood'].forEach(id => document.getElementById(id).value = '');
+  const btn = document.querySelector('#journal-overlay .btn-primary');
+  btn.textContent = 'Save Entry';
+  btn.onclick = saveJournalEntry;
+}
+
+async function saveJournalEntry() {
+  const title = document.getElementById('j-title').value.trim();
+  if (!title) { toast('Please enter a title', 'error'); return; }
+  const btn = document.querySelector('#journal-overlay .btn-primary');
+  btn.textContent = 'Saving…'; btn.disabled = true;
+  try {
+    await sb('journal_entries', { method: 'POST', body: JSON.stringify({
+      title,
+      phase: document.getElementById('j-phase').value.trim() || null,
+      time_spent: document.getElementById('j-time').value.trim() || null,
+      read_studied: document.getElementById('j-read').value.trim() || null,
+      lab_done: document.getElementById('j-lab').value.trim() || null,
+      what_clicked: document.getElementById('j-clicked').value.trim() || null,
+      what_confused: document.getElementById('j-confused').value.trim() || null,
+      next_session: document.getElementById('j-next').value.trim() || null,
+      mood: document.getElementById('j-mood').value.trim() || null,
+    })});
+    closeJournalForm(); await loadJournals(); renderDashboard(); toast('✓ Entry saved'); nav('journal');
+  } catch(e) { toast('Error: ' + e.message, 'error'); }
+  finally { btn.textContent = 'Save Entry'; btn.disabled = false; }
+}
+
+// ── HELPERS ──
+function openLB(url) { document.getElementById('lb-img').src = url; document.getElementById('lightbox').classList.add('open'); }
+function closeLB() { document.getElementById('lightbox').classList.remove('open'); }
+
+function toast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function fmtDate(s) {
+  if (!s) return '—';
+  return new Date(s).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+loadAll();
+</script>
+</body>
+</html>
