@@ -845,7 +845,10 @@ textarea { resize: vertical; min-height: 72px; }
 <!-- LIGHTBOX -->
 <div class="lightbox" id="lightbox" onclick="closeLB()">
   <button class="lb-close">✕</button>
-  <img id="lb-img" src="" alt="">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+    <img id="lb-img" src="" alt="">
+    <div id="lb-caption" style="color:#e6edf3;font-size:12px;font-family:'JetBrains Mono',monospace;text-align:center;max-width:90vw;opacity:0.8"></div>
+  </div>
 </div>
 
 <!-- TOAST -->
@@ -915,9 +918,10 @@ async function sb(path, opts = {}) {
 
 async function uploadImg(file) {
   const ext = file.name.split('.').pop();
-  const name = `${Date.now()}-${Math.random().toString(36).substr(2,5)}.${ext}`;
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const storageName = `${Date.now()}-${Math.random().toString(36).substr(2,5)}-${safeName}`;
   try {
-    const r = await fetch(`${SB_URL}/storage/v1/object/screenshots/${name}`, {
+    const r = await fetch(`${SB_URL}/storage/v1/object/screenshots/${storageName}`, {
       method: 'POST',
       headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': file.type },
       body: file
@@ -925,13 +929,15 @@ async function uploadImg(file) {
     const text = await r.text();
     if (!r.ok) {
       toast('Upload error: ' + text, 'error');
-      console.error('Upload failed:', text);
       return null;
     }
-    return `${SB_URL}/storage/v1/object/public/screenshots/${name}`;
+    // Return object with url and original filename
+    return {
+      url: `${SB_URL}/storage/v1/object/public/screenshots/${storageName}`,
+      caption: file.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ')
+    };
   } catch(e) {
     toast('Upload error: ' + e.message, 'error');
-    console.error('Upload exception:', e);
     return null;
   }
 }
@@ -1123,7 +1129,17 @@ function renderLabBody(lab) {
   h += f('Lessons Learned', lab.lessons);
   if (lab.skills_demonstrated?.length) h += `<div class="field"><div class="field-label">Skills Demonstrated</div><div class="env-chips">${lab.skills_demonstrated.map(s => `<span class="env-chip">${esc(s)}</span>`).join('')}</div></div>`;
   if (lab.ref_links) h += `<div class="field"><div class="field-label">References</div><div class="field-val">${lab.ref_links.trim().split('\n').map(l => l.trim()).filter(Boolean).map(l => l.startsWith('http') ? `<a class="gh-link" href="${esc(l)}" target="_blank">⌥ ${esc(l)}</a>` : esc(l)).join('<br>')}</div></div>`;
-  if (lab.screenshots?.length) h += `<div class="field"><div class="field-label">Evidence (${lab.screenshots.length})</div><div class="screenshots-grid">${lab.screenshots.map(u => `<div class="ss-thumb" onclick="openLB('${esc(u)}')"><img src="${esc(u)}" loading="lazy"></div>`).join('')}</div></div>`;
+  if (lab.screenshots?.length) {
+    const thumbs = lab.screenshots.map(s => {
+      let url, caption;
+      try { const obj = typeof s === 'string' && s.startsWith('{') ? JSON.parse(s) : null; url = obj ? obj.url : s; caption = obj ? obj.caption : ''; }
+      catch { url = s; caption = ''; }
+      return `<div class="ss-thumb" onclick="openLB('${esc(url)}','${esc(caption)}')">
+        <img src="${esc(url)}" loading="lazy">
+      </div>`;
+    }).join('');
+    h += `<div class="field"><div class="field-label">Evidence (${lab.screenshots.length})</div><div class="screenshots-grid">${thumbs}</div></div>`;
+  }
   return h || `<div style="color:var(--text3);font-size:12px">No details recorded.</div>`;
 }
 
@@ -1205,7 +1221,7 @@ async function updateLab(id) {
   try {
     // Upload any new screenshots
     const newUrls = [];
-    for (const f of pendingFiles) { const u = await uploadImg(f.file); if (u) newUrls.push(u); }
+    for (const f of pendingFiles) { const u = await uploadImg(f.file); if (u) newUrls.push(JSON.stringify(u)); }
 
     // Merge with existing screenshots from the lab record
     const existing = labs.find(l => l.id === id);
@@ -1348,7 +1364,7 @@ async function saveLabReport() {
   btn.textContent = 'Saving…'; btn.disabled = true;
   try {
     const urls = [];
-    for (const f of pendingFiles) { const u = await uploadImg(f.file); if (u) urls.push(u); }
+    for (const f of pendingFiles) { const u = await uploadImg(f.file); if (u) urls.push(JSON.stringify(u)); }
     const env = document.getElementById('f-environment').value.trim();
     const tags = document.getElementById('f-tags').value.trim();
     const skills = document.getElementById('f-skills').value.trim();
@@ -1412,7 +1428,11 @@ async function saveJournalEntry() {
 }
 
 // ── HELPERS ──
-function openLB(url) { document.getElementById('lb-img').src = url; document.getElementById('lightbox').classList.add('open'); }
+function openLB(url, caption) {
+  document.getElementById('lb-img').src = url;
+  document.getElementById('lb-caption').textContent = caption || '';
+  document.getElementById('lightbox').classList.add('open');
+}
 function closeLB() { document.getElementById('lightbox').classList.remove('open'); }
 
 function toast(msg, type = 'success') {
