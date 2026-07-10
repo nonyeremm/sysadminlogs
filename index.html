@@ -918,8 +918,7 @@ async function sb(path, opts = {}) {
 
 async function uploadImg(file) {
   const ext = file.name.split('.').pop();
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-  const storageName = `${Date.now()}-${Math.random().toString(36).substr(2,5)}-${safeName}`;
+  const storageName = `${Date.now()}-${Math.random().toString(36).substr(2,5)}.${ext}`;
   try {
     const r = await fetch(`${SB_URL}/storage/v1/object/screenshots/${storageName}`, {
       method: 'POST',
@@ -927,15 +926,8 @@ async function uploadImg(file) {
       body: file
     });
     const text = await r.text();
-    if (!r.ok) {
-      toast('Upload error: ' + text, 'error');
-      return null;
-    }
-    // Return object with url and original filename
-    return {
-      url: `${SB_URL}/storage/v1/object/public/screenshots/${storageName}`,
-      caption: file.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ')
-    };
+    if (!r.ok) { toast('Upload error: ' + text, 'error'); return null; }
+    return `${SB_URL}/storage/v1/object/public/screenshots/${storageName}`;
   } catch(e) {
     toast('Upload error: ' + e.message, 'error');
     return null;
@@ -1222,7 +1214,7 @@ async function updateLab(id) {
     const newCaptions = [];
     for (const f of pendingFiles) {
       const u = await uploadImg(f.file);
-      if (u) { newUrls.push(u.url); newCaptions.push(u.caption); }
+      if (u) { newUrls.push(u); newCaptions.push(f.caption || ''); }
     }
     const existing = labs.find(l => l.id === id);
     const existingUrls = existing?.screenshots || [];
@@ -1349,7 +1341,7 @@ function closeLabForm() {
 function handleFiles(input) {
   Array.from(input.files).forEach(file => {
     const r = new FileReader();
-    r.onload = e => { pendingFiles.push({ file, url: e.target.result }); renderPreviews(); };
+    r.onload = e => { pendingFiles.push({ file, url: e.target.result, caption: file.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ') }); renderPreviews(); };
     r.readAsDataURL(file);
   });
   input.value = '';
@@ -1357,7 +1349,10 @@ function handleFiles(input) {
 
 function renderPreviews() {
   document.getElementById('up-previews').innerHTML = pendingFiles.map((f, i) =>
-    `<div class="up-prev"><img src="${f.url}"><button class="up-rm" onclick="pendingFiles.splice(${i},1);renderPreviews()">✕</button></div>`).join('');
+    `<div style="margin-bottom:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px;display:flex;gap:8px;align-items:center">
+      <div class="up-prev" style="flex-shrink:0"><img src="${f.url}"><button class="up-rm" onclick="pendingFiles.splice(${i},1);renderPreviews()">✕</button></div>
+      <input type="text" value="${esc(f.caption)}" placeholder="Caption…" style="flex:1;font-size:12px;padding:5px 8px" oninput="pendingFiles[${i}].caption=this.value">
+    </div>`).join('');
 }
 
 async function saveLabReport() {
@@ -1371,8 +1366,8 @@ async function saveLabReport() {
     for (const f of pendingFiles) {
       const u = await uploadImg(f.file);
       if (u) {
-        urls.push(u.url);
-        captions.push(u.caption);
+        urls.push(u);
+        captions.push(f.caption || '');
       }
     }
     const env = document.getElementById('f-environment').value.trim();
