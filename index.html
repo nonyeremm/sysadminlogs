@@ -1130,7 +1130,7 @@ function renderLabBody(lab) {
   if (lab.skills_demonstrated?.length) h += `<div class="field"><div class="field-label">Skills Demonstrated</div><div class="env-chips">${lab.skills_demonstrated.map(s => `<span class="env-chip">${esc(s)}</span>`).join('')}</div></div>`;
   if (lab.ref_links) h += `<div class="field"><div class="field-label">References</div><div class="field-val">${lab.ref_links.trim().split('\n').map(l => l.trim()).filter(Boolean).map(l => l.startsWith('http') ? `<a class="gh-link" href="${esc(l)}" target="_blank">⌥ ${esc(l)}</a>` : esc(l)).join('<br>')}</div></div>`;
   if (lab.screenshots?.length) {
-    const thumbs = lab.screenshots.map(s => {
+    const thumbs = lab.screenshots.map((s, idx) => {
       let url, caption;
       try {
         if (typeof s === 'string' && s.startsWith('{')) {
@@ -1139,13 +1139,12 @@ function renderLabBody(lab) {
           caption = obj.caption;
         } else {
           url = s;
-          // Extract caption from URL filename
           const filename = url.split('/').pop().split('?')[0];
-          // Remove timestamp prefix (e.g. 1234567890-abc12-)
           caption = filename.replace(/^\d+-[a-z0-9]+-/, '').replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ');
         }
       } catch { url = s; caption = ''; }
-      return `<div class="ss-thumb" onclick="openLB('${esc(url)}','${esc(caption)}')">
+      const safeId = `ss-${lab.id || idx}-${idx}`;
+      return `<div class="ss-thumb" id="${safeId}" data-url="${esc(url)}" data-caption="${esc(caption)}" onclick="openLBFromEl(this)">
         <img src="${esc(url)}" loading="lazy">
       </div>`;
     }).join('');
@@ -1439,9 +1438,17 @@ async function saveJournalEntry() {
 }
 
 // ── HELPERS ──
+function openLBFromEl(el) {
+  const url = el.getAttribute('data-url');
+  const caption = el.getAttribute('data-caption');
+  openLB(url, caption);
+}
+
 function openLB(url, caption) {
   document.getElementById('lb-img').src = url;
-  document.getElementById('lb-caption').textContent = caption || '';
+  const cap = document.getElementById('lb-caption');
+  cap.textContent = caption || '';
+  cap.style.display = caption ? 'block' : 'none';
   document.getElementById('lightbox').classList.add('open');
 }
 function closeLB() { document.getElementById('lightbox').classList.remove('open'); }
