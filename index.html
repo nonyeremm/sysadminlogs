@@ -1161,7 +1161,7 @@ function renderLabs() {
 }
 
 function renderLabBody(lab) {
-  const f = (label, val) => val ? `<div class="field"><div class="field-label">${label}</div><div class="field-val">${esc(val.trim())}</div></div>` : '';
+  const f = (label, val) => val ? `<div class="field"><div class="field-label">${label}</div><div class="field-val">${escNl(val.trim())}</div></div>` : '';
   let h = '';
 
   if (lab.difficulty) h += `<div class="field"><div class="field-label">Level</div><div class="field-val">${esc(lab.difficulty)}</div></div>`;
@@ -1222,7 +1222,7 @@ function renderJournalBody(j) {
     ['Next Session Plan', j.next_session], ['Mood', j.mood]
   ];
   return fields.filter(([, v]) => v && v.trim()).map(([label, val]) =>
-    `<div class="field"><div class="field-label">${label}</div><div class="field-val">${esc(val.trim())}</div></div>`
+    `<div class="field"><div class="field-label">${label}</div><div class="field-val">${escNl(val.trim())}</div></div>`
   ).join('') || `<div style="color:var(--text3);font-size:12px">No content recorded.</div>`;
 }
 
@@ -1517,6 +1517,11 @@ function fmtDate(s) {
 function esc(s) {
   if (!s) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function escNl(s) {
+  if (!s) return '';
+  return esc(s).replace(/\n+/g, '<br>');
 }
 
 initAuth().then(loadAll);
