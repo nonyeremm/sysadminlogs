@@ -796,6 +796,7 @@ textarea { resize: vertical; min-height: 72px; }
         <option value="🟡 Intermediate">🟡 Intermediate</option>
         <option value="🔵 Advanced">🔵 Advanced</option>
       </select></div>
+      <div class="fg"><label>Time Spent</label><input type="text" id="f-time" placeholder="e.g. 2 hours"></div>
       <div class="fg"><label>Environment (one per line)</label><textarea id="f-environment" rows="3" placeholder="Windows Server 2022&#10;Active Directory&#10;VMware Workstation"></textarea></div>
       <div class="fg"><label>Architecture</label><textarea id="f-architecture" rows="4" placeholder="DC01&#10;│&#10;├── Finance OU&#10;│   ├── Finance Users&#10;│   └── Finance Desktop Restrictions GPO"></textarea></div>
       <div class="fg"><label>Implementation</label><textarea id="f-implementation" rows="4" placeholder="Step by step what you did…"></textarea></div>
@@ -1165,6 +1166,7 @@ function renderLabBody(lab) {
   let h = '';
 
   if (lab.difficulty) h += `<div class="field"><div class="field-label">Level</div><div class="field-val">${esc(lab.difficulty)}</div></div>`;
+  if (lab.time_spent) h += `<div class="field"><div class="field-label">Time Spent</div><div class="field-val">${esc(lab.time_spent)}</div></div>`;
   h += f('Objective', lab.objective);
   h += f('Scenario', lab.scenario);
   if (lab.environment?.length) h += `<div class="field"><div class="field-label">Environment</div><div class="env-chips">${lab.environment.map(e => `<span class="env-chip">${esc(e)}</span>`).join('')}</div></div>`;
@@ -1241,6 +1243,7 @@ function editLab(i) {
   document.getElementById('f-objective').value = lab.objective || '';
   document.getElementById('f-scenario').value = lab.scenario || '';
   document.getElementById('f-difficulty').value = lab.difficulty || '';
+  document.getElementById('f-time').value = lab.time_spent || '';
   document.getElementById('f-environment').value = (lab.environment || []).join('\n');
   document.getElementById('f-architecture').value = lab.architecture || '';
   document.getElementById('f-implementation').value = lab.implementation || '';
@@ -1285,6 +1288,7 @@ async function updateLab(id) {
       date: document.getElementById('f-date').value || null,
       tags: tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [],
       difficulty: document.getElementById('f-difficulty').value || null,
+      time_spent: document.getElementById('f-time').value.trim() || null,
       objective: document.getElementById('f-objective').value.trim() || null,
       scenario: document.getElementById('f-scenario').value.trim() || null,
       environment: env ? env.split('\n').map(t => t.trim()).filter(Boolean) : [],
@@ -1387,6 +1391,7 @@ function closeLabForm() {
   document.getElementById('up-previews').innerHTML = '';
   ['f-title','f-tags','f-objective','f-scenario','f-architecture','f-environment','f-implementation','f-issues','f-resolution','f-lessons','f-skills','f-refs'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('f-difficulty').value = '';
+  document.getElementById('f-time').value = '';
   const btn = document.querySelector('#lab-overlay .btn-primary');
   btn.textContent = 'Save Report';
   btn.onclick = saveLabReport;
@@ -1434,6 +1439,7 @@ async function saveLabReport() {
       date: document.getElementById('f-date').value || null,
       tags: tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [],
       difficulty: document.getElementById('f-difficulty').value || null,
+      time_spent: document.getElementById('f-time').value.trim() || null,
       objective: document.getElementById('f-objective').value.trim() || null,
       scenario: document.getElementById('f-scenario').value.trim() || null,
       environment: env ? env.split('\n').map(t => t.trim()).filter(Boolean) : [],
